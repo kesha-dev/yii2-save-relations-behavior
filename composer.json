@@ -1,5 +1,5 @@
 {
-    "name": "la-haute-societe/yii2-save-relations-behavior",
+    "name": "kesha-dev/yii2-save-relations-behavior",
     "description": "Validate and save automatically related Active Record models.",
     "type": "yii2-extension",
     "keywords": [
@@ -18,6 +18,10 @@
         {
             "name": "Alban Jubert",
             "email": "alban@lahautesociete.com"
+        },
+        {
+            "name": "Kesha",
+            "email": "yourfriendkesha.sendmemes@gmail.com"
         }
     ],
     "require": {

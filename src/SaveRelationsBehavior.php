@@ -29,6 +29,7 @@ class SaveRelationsBehavior extends Behavior
     const RELATION_KEY_FORM_NAME = 'formName';
     const RELATION_KEY_RELATION_NAME = 'relationName';
 
+    public $manyToMany = true;
     public $relations = [];
     public $relationKeyName = self::RELATION_KEY_FORM_NAME;
 
@@ -581,7 +582,7 @@ class SaveRelationsBehavior extends Behavior
         });
         $initialRelations = $owner->{$relationName};
         foreach ($deletedPks as $key) {
-            $owner->unlink($relationName, $initialModels[$key], true);
+            $owner->unlink($relationName, $initialModels[$key], $this->manyToMany);
         }
 
         // Added relations
