@@ -29,7 +29,6 @@ class SaveRelationsBehavior extends Behavior
     const RELATION_KEY_FORM_NAME = 'formName';
     const RELATION_KEY_RELATION_NAME = 'relationName';
 
-    public $manyToMany = true;
     public $relations = [];
     public $relationKeyName = self::RELATION_KEY_FORM_NAME;
 
@@ -45,6 +44,7 @@ class SaveRelationsBehavior extends Behavior
     private $_relationsScenario = [];
     private $_relationsExtraColumns = [];
     private $_relationsCascadeDelete = [];
+    private $_relationsOneToMany = [];
 
     /**
      * @inheritdoc
@@ -52,7 +52,7 @@ class SaveRelationsBehavior extends Behavior
     public function init()
     {
         parent::init();
-        $allowedProperties = ['scenario', 'extraColumns', 'cascadeDelete'];
+        $allowedProperties = ['scenario', 'extraColumns', 'cascadeDelete', 'oneToMany'];
         foreach ($this->relations as $key => $value) {
             if (is_int($key)) {
                 $this->_relations[] = $value;
@@ -582,7 +582,7 @@ class SaveRelationsBehavior extends Behavior
         });
         $initialRelations = $owner->{$relationName};
         foreach ($deletedPks as $key) {
-            $owner->unlink($relationName, $initialModels[$key], $this->manyToMany);
+            $owner->unlink($relationName, $initialModels[$key], array_key_exists($relationName, $this->_relationsOneToMany) ? $this->_relationsOneToMany[$relationName] : true);
         }
 
         // Added relations
