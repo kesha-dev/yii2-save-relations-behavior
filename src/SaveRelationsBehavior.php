@@ -560,12 +560,6 @@ class SaveRelationsBehavior extends Behavior
             } else {
                 $existingRecords[] = $relationModel;
             }
-            if (count($relationModel->dirtyAttributes) || count($this->_newRelationValue)) {
-                if (!$relationModel->save()) {
-                    $this->_addError($relationModel, $owner, $relationName, self::prettyRelationName($relationName));
-                    throw new DbException('Related record ' . self::prettyRelationName($relationName) . ' could not be saved.');
-                }
-            }
         }
         $junctionTablePropertiesUsed = array_key_exists($relationName, $this->_relationsExtraColumns);
 
