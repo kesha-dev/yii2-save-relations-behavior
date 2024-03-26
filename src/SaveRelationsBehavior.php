@@ -44,7 +44,8 @@ class SaveRelationsBehavior extends Behavior
     private $_relationsScenario = [];
     private $_relationsExtraColumns = [];
     private $_relationsCascadeDelete = [];
-    private $_relationsOneToMany = [];
+    private $_relationsOneToManyDeleteRelatedRecord = [];
+    private $_relationsValidateRelation = [];
 
     /**
      * @inheritdoc
@@ -52,7 +53,7 @@ class SaveRelationsBehavior extends Behavior
     public function init()
     {
         parent::init();
-        $allowedProperties = ['scenario', 'extraColumns', 'cascadeDelete', 'oneToMany'];
+        $allowedProperties = ['scenario', 'extraColumns', 'cascadeDelete', 'oneToManyDeleteRelatedRecord', 'validateRelation'];
         foreach ($this->relations as $key => $value) {
             if (is_int($key)) {
                 $this->_relations[] = $value;
@@ -78,11 +79,11 @@ class SaveRelationsBehavior extends Behavior
     {
         return [
             BaseActiveRecord::EVENT_BEFORE_VALIDATE => 'beforeValidate',
-            BaseActiveRecord::EVENT_AFTER_VALIDATE  => 'afterValidate',
-            BaseActiveRecord::EVENT_AFTER_INSERT    => 'afterSave',
-            BaseActiveRecord::EVENT_AFTER_UPDATE    => 'afterSave',
-            BaseActiveRecord::EVENT_BEFORE_DELETE   => 'beforeDelete',
-            BaseActiveRecord::EVENT_AFTER_DELETE    => 'afterDelete'
+            BaseActiveRecord::EVENT_AFTER_VALIDATE => 'afterValidate',
+            BaseActiveRecord::EVENT_AFTER_INSERT => 'afterSave',
+            BaseActiveRecord::EVENT_AFTER_UPDATE => 'afterSave',
+            BaseActiveRecord::EVENT_BEFORE_DELETE => 'beforeDelete',
+            BaseActiveRecord::EVENT_AFTER_DELETE => 'afterDelete'
         ];
     }
 
@@ -547,6 +548,7 @@ class SaveRelationsBehavior extends Behavior
         // Process new relations
         $existingRecords = [];
         /** @var ActiveQuery $relationModel */
+
         foreach ($owner->{$relationName} as $i => $relationModel) {
             if ($relationModel->isNewRecord) {
                 if (!empty($relation->via)) {
@@ -560,6 +562,14 @@ class SaveRelationsBehavior extends Behavior
             } else {
                 $existingRecords[] = $relationModel;
             }
+            if (count($relationModel->dirtyAttributes) || count($this->_newRelationValue)) {
+                if (!$relationModel->save()) {
+                    if (!array_key_exists($relationName, $this->_relationsValidateRelation) || $this->_relationsValidateRelation[$relationName]) {
+                        $this->_addError($relationModel, $owner, $relationName, self::prettyRelationName($relationName));
+                        throw new DbException('Related record ' . self::prettyRelationName($relationName) . ' could not be saved.');
+                    }
+                }
+            }
         }
         $junctionTablePropertiesUsed = array_key_exists($relationName, $this->_relationsExtraColumns);
 
@@ -570,13 +580,17 @@ class SaveRelationsBehavior extends Behavior
             $junctionTablePropertiesUsed
         );
 
-        // Deleted relations
         $initialModels = ArrayHelper::index($this->_oldRelationValue[$relationName], function (BaseActiveRecord $model) {
             return implode('-', $model->getPrimaryKey(true));
         });
+
         $initialRelations = $owner->{$relationName};
         foreach ($deletedPks as $key) {
-            $owner->unlink($relationName, $initialModels[$key], array_key_exists($relationName, $this->_relationsOneToMany) ? $this->_relationsOneToMany[$relationName] : true);
+            $delete = true;
+            if (!$relation->via) {
+                $delete = array_key_exists($relationName, $this->_relationsOneToManyDeleteRelatedRecord) ? $this->_relationsOneToManyDeleteRelatedRecord[$relationName] : false;
+            }
+            $owner->unlink($relationName, $initialModels[$key], $delete);
         }
 
         // Added relations
