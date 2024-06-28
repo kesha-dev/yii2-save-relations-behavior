@@ -566,7 +566,7 @@ class SaveRelationsBehavior extends Behavior
                 if (!$relationModel->save()) {
                     if (!array_key_exists($relationName, $this->_relationsValidateRelation) || $this->_relationsValidateRelation[$relationName]) {
                         $this->_addError($relationModel, $owner, $relationName, self::prettyRelationName($relationName));
-                        throw new DbException('Related record ' . self::prettyRelationName($relationName) . ' could not be saved.');
+                        throw new DbException('Model ' . self::prettyRelationName($relationName) . ' id = ' . $relationModel->id . PHP_EOL . VarDumper::dumpAsString($relationModel->firstErrors));
                     }
                 }
             }
