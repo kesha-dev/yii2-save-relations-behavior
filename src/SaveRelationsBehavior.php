@@ -563,12 +563,7 @@ class SaveRelationsBehavior extends Behavior
                 $existingRecords[] = $relationModel;
             }
             if (count($relationModel->dirtyAttributes) || count($this->_newRelationValue)) {
-                if (!$relationModel->save()) {
-                    if (!array_key_exists($relationName, $this->_relationsValidateRelation) || $this->_relationsValidateRelation[$relationName]) {
-                        $this->_addError($relationModel, $owner, $relationName, self::prettyRelationName($relationName));
-                        throw new DbException('Model ' . self::prettyRelationName($relationName) . ' id = ' . $relationModel->id . PHP_EOL . VarDumper::dumpAsString($relationModel->firstErrors));
-                    }
-                }
+                $relationModel->save(false);
             }
         }
         $junctionTablePropertiesUsed = array_key_exists($relationName, $this->_relationsExtraColumns);
@@ -678,7 +673,7 @@ class SaveRelationsBehavior extends Behavior
             }
         }
         if ($owner->{$relationName} instanceof BaseActiveRecord) {
-            $owner->{$relationName}->save();
+            $owner->{$relationName}->save(false);
         }
     }
 
